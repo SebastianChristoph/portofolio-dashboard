@@ -1,0 +1,458 @@
+{% extends "base.html" %} {% block content %}
+
+<!-- HERO -->
+<div class="col">
+    <div class="row g-0 site-info">
+        <div class="col-md-4 p-2 d-flex justify-content-center">
+            <img src="{{ url_for('static', filename='bildwatch.png') }}" width="300" class="img-fluid rounded-start" alt="BILDwatch">
+        </div>
+         <div class="col-md-8 p-4">
+            <p class="card-text">Diese Anwendung hilft Ihnen dabei, die neuesten Inhalte von der BILD-Website im Blick zu behalten. Sie sammelt Artikel, die als BILDplus gekennzeichnet sind, und speichert diese in einer übersichtlichen Datei. Außerdem überprüft die App regelmäßig, ob ein kostenpflichtiger Artikel irgendwann kostenlos verfügbar wird. Sobald dies passiert, erfasst die Anwendung, wie viel Zeit vergangen ist, seit der Artikel ursprünglich als Premium-Inhalt veröffentlicht wurde. So bleiben Sie immer informiert und verpassen keine Neuigkeiten mehr!</p>
+
+            <p class="card-text"><strong>Anzahl analysierter BildPlus-Artikel: </strong>{{keyfacts['articles_total']}}</p>
+            <p class="card-text"><strong>Davon konvertiert zu normalen Artikeln:</strong> {{keyfacts['articles_converted']}} ({{ (keyfacts['articles_converted'] / keyfacts['articles_total'] * 100) | round(0) }}%)</p>
+            <p class="card-text"><strong>Durchschnittliche Zeit bis zur Konvertierung:</strong> {{keyfacts['average_convert_time']}}</p>
+
+            <p class="card-text"><strong>Analyse läuft seit:</strong> {{keyfacts['difference_in_days']}} Tagen</p>
+        </div>
+
+       <div class="container">
+        <div class="row">
+          <div class="col">
+             <div class="row g-0 justify-content-end">
+              <div class="col-md-2" style="padding-right: 1rem;">
+                <a href="https://www.linkedin.com/in/sebastian-christoph-9500a4118/" class="btn btn-primary my-2" style="width: 100%;" target="_blank">LinkedIn <i class="icon-linkedin"> </i></a>
+              </div>
+
+              <div class="col-md-2" style="padding-right: 1rem;">
+                <a href="https://github.com/SebastianChristoph/bildwatch" class="btn btn-primary my-2" style="width: 100%;" target="_blank">GitHub <i class="icon-github"> </i></a>
+              </div>
+
+              <div class="col-md-2" style="padding-right: 1rem;">
+                <a href="mailto:hallo@sebastianchristoph.com" class="btn btn-secondary my-2" style="width: 100%;" target="_blank">Kontakt <i class="icon-envelope"> </i></a>
+              </div>
+
+            </div>
+          </div>
+      </div>
+    </div>
+    </div>
+</div>
+
+
+
+<br/>
+<hr>
+<br/>
+
+<!-- CHARTS -->
+<div class="col">
+    <div class="row g-0">
+        <div class="col-md-6 p-2 d-flex justify-content-center">
+            <canvas id="chartOverview"></canvas>
+        </div>
+         <div class="col-md-6 p-2 d-flex justify-content-center">
+            <canvas id="chartOverviewCategories"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="col" style="margin-top: 100px">
+    <div class="row g-0">
+        <!-- Chart: Artikel pro Tag -->
+        <div class="col-md-12 p-2 d-flex justify-content-center">
+            <canvas id="chartArticlesPerDay"></canvas>
+        </div>
+</div>
+
+<div class="container">
+    <div class="d-flex flex-row-reverse">
+        <div class="p-2">
+            <button id="downloadChartButton" class="custom-btn">Download Diagramm als JPG</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="col" style="margin-top: 100px">
+    <div class="row g-0">
+        <!-- Chart: Zeit zwischen Veröffentlichung und Konvertierung -->
+        <div class="col-md-4 p-2 d-flex justify-content-center">
+            <form action="/bildwatch" method="post">
+                <label for="date">Datum aussuchen für tiefere Analyse:</label>
+                <br/>
+
+                <select id="date" name="date">
+                    {% for key, value in days.items() %}
+                    <option value="{{ key }}" {% if key | string | trim == default_date | string | trim %}selected{% endif %}>{{ key }}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" class="custom-btn" value="Anzeigen">
+            </form>
+        </div>
+
+        <div class="col-md-8 p-2 d-flex justify-content-center">
+            <div>
+
+            </div>
+            <canvas id="chartTimeBetween"></canvas>
+        </div>
+    </div>
+</div>
+
+<br/>
+<a href={{ url_for('bildwatch_api') }} target="_blank">Download Daten als JSON</a>
+<br/>
+<br/>
+
+<details>
+    <summary>Übersicht aller konvertierten BildPlus-Artikel ({{keyfacts['articles_converted']}}/{{keyfacts['articles_total']}} in {{keyfacts['difference_in_days']}} Tagen)</summary>
+    <code>
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                <th scope="col">BildPlus-Artikel</th>
+                <th scope="col">Kategorie</th>
+                <th scope="col">Veröffentlicht</th>
+                <th scope="col">Wechsel zu "Normal"</th>
+                <th scope="col">Zeitspanne [hh, mm]</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {% for key, value in data.items() %}
+                {% if key != 'lastUpdated' %}
+
+                    {% if value['timeBetween'] != None %}
+                    <tr>
+                        <td>
+                            <a href="{{value['url']}}" target="_blank" style="color: white !important">
+                            {{value['title']}}
+                            </a>
+                        </td>
+                        <td>{{value['category']}}</td>
+                        <td>{{value['published'].split('.')[0]}}</td>
+                        <td>{{value['publishedToNormal'].split('.')[0]}}</td>
+                        <td>{{value['timeBetween'].split(',')[0]}}h {{value['timeBetween'].split(',')[1]}}min</td>
+                    </tr>
+
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </code>
+  </details>
+
+  <details>
+    <summary>Alle Daten im Detail</summary>
+    <code>
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                <th scope="col">BildPlus-Artikel</th>
+                <th scope="col">Kategorie</th>
+                <th scope="col">Veröffentlicht</th>
+                <th scope="col">Wechsel zu "Normal"</th>
+                <th scope="col">Zeitspanne [hh, mm]</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {% for key, value in data.items() %}
+                {% if key != 'lastUpdated' %}
+
+                {% if value['timeBetween'] != None %}
+                    <tr class="table-danger">
+                {% else %}
+                    <tr>
+                {% endif %}
+                        <td>
+                            <a href="{{value['url']}}" target="_blank" style="color: white !important">
+                            {{value['title']}}
+                            </a>
+                        </td>
+                        <td>{{value['category']}}</td>
+                        <td>{{value['published'].split('.')[0]}}</td>
+                        {% if value['publishedToNormal'] == None%}
+                            <td>-</td>
+                        {% else %}
+                            <td>{{value['publishedToNormal'].split('.')[0]}}</td>
+                        {% endif %}
+
+                        {% if value['timeBetween'] == None%}
+                            <td>-</td>
+                        {% else %}
+                            <td>{{value['timeBetween'].split(',')[0]}}h {{value['timeBetween'].split(',')[1]}}min</td>
+                        {% endif %}
+                    </tr>
+
+                {% endif %}
+
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </code>
+  </details>
+
+<div class="container">
+    <div class="d-flex flex-row-reverse">
+        <div class="p-2">
+        <a href={{ url_for('dashboard') }} class="custom-btn">Zurück zum Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('chartOverview');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+                labels: [
+                    'Konvertiert',
+                    'BildPlus'
+                ],
+                datasets: [{
+                    label: 'Anzahl Artikel',
+                    data: [{{keyfacts['articles_converted']}}, {{keyfacts['articles_total']}} - {{keyfacts['articles_converted']}}],
+                    backgroundColor: [
+                    '#f9cb5e',
+                    '#26dbe0'
+                    ],
+                    hoverOffset: 4
+                    }]
+                },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Anteil konvertierter BildPlusArtikel',
+                        font: {
+                            size: 22,
+                        },
+                        color: "white",
+                    },
+                    legend :{
+                        labels: {
+                            color: "white",
+                        }
+                    }
+                }
+            }
+        });
+</script>
+
+
+<script>
+const ctx2 = document.getElementById('chartOverviewCategories');
+var categoryData = JSON.parse('{{ category_data | safe }}');
+
+// Erstelle Labels und Datenarrays basierend auf den Schlüsseln und Werten
+var labels = Object.keys(categoryData); // Die Schlüssel (z.B. 'Sport', 'Unterhaltung') sind die Labels
+var dataValues = Object.values(categoryData); // Die Werte (z.B. 2, 5, ...) sind die Daten
+
+new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+        labels: labels, // Setze die Labels hier
+        datasets: [{
+            label: 'Anzahl konvertierter BildPlusArtikel in Kategorie',
+            data: dataValues, // Setze die Daten hier
+            borderWidth: 1
+        }]
+    },
+    options: {
+        plugins: {
+            title: {
+                display: true,
+                text: 'Kategorien konvertierter BildPlusArtikel',
+                font: {
+                    size: 22,
+                },
+                color: "white",
+            },
+            legend :{
+                labels: {
+                    color: "white",
+                }
+            }
+        }
+    }
+});
+</script>
+
+<script>
+    const articlesPerDayData = JSON.parse('{{ articles_per_day | safe }}');
+    const articleDates = Object.keys(articlesPerDayData);
+    const articleCounts = Object.values(articlesPerDayData);
+
+    const unconvertedArticlesPerDayData = JSON.parse('{{ unconverted_data | safe }}');
+    const unconvertedArticleDates = Object.keys(unconvertedArticlesPerDayData);
+    const unconvertedArticleCounts = Object.values(unconvertedArticlesPerDayData);
+
+
+    const chartArticlesPerDay = new Chart(document.getElementById('chartArticlesPerDay'), {
+        type: 'line',
+        data: {
+            labels: articleDates,
+            datasets: [{
+    label: 'Summe konvertierter Artikel',
+    data: articleCounts,
+    borderColor: '#f9cb5e',
+    backgroundColor: 'rgba(249, 203, 94, 0.2)',
+    fill: true,
+    pointBackgroundColor: '#f9cb5e',
+    pointBorderColor: '#fff',
+},
+{
+    label: 'Summe unkonvertierter Artikel',
+    data: unconvertedArticleCounts,
+    borderColor: '#4caf50', // Grün
+    backgroundColor: 'rgba(76, 175, 80, 0.2)', // Transparente Hintergrundfarbe
+    fill: true,
+    pointBackgroundColor: '#4caf50',
+    pointBorderColor: '#fff',
+}]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Anzahl Artikel pro Tag',
+                    font: {
+                        size: 14,
+                    },
+                    color: "white"
+                },
+                legend: {
+                    display: true,
+                    labels:{
+                        color: "white",
+                    }
+
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "white" },
+                    title: {
+                        display: true,
+                        text: 'Datum',
+                        color: "white",
+
+                    }
+                },
+                y: {
+                    ticks: { color: "white" },
+                    title: {
+                      display: true,
+                      text: "Anzahl Artikel pro Tag",
+                      color: "white",
+                  },
+                }
+            }
+        }
+    });
+
+    const timeBetweenHistogramData = JSON.parse('{{ time_between_histogram | safe }}');
+
+new Chart(document.getElementById('chartTimeBetween'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(timeBetweenHistogramData), // Zeitbereiche als X-Achsen-Labels
+        datasets: [{
+            label: 'Stunden zwischen Veröffentlichung und Konvertierung',
+            data: Object.values(timeBetweenHistogramData), // Häufigkeiten als Y-Werte
+            backgroundColor: '#26dbe0',
+            borderColor: '#26dbe0',
+            borderWidth: 1,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Zeit zwischen Veröffentlichung als BildPlus-Artikel und Konvertierung am {{ target_date }}',
+                font: {
+                    size: 12,
+                },
+                color: "white"
+            },
+            legend: {
+                display: false,
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: "white" },
+                title: {
+                      display: true,
+                      text: "Stunden zwischen Veröffentlichung als BildPlus-Artikel und Konvertierung",
+                      color: "white",
+                  },
+            },
+            y: {
+                ticks: { color: "white" },
+                title: {
+                      display: true,
+                      text: "Anzahl konvertierter BildPlus Artikel",
+                      color: "white",
+                  },
+            }
+        }
+    }
+});
+
+document.getElementById('downloadChartButton').addEventListener('click', function() {
+
+    // Speichere die ursprünglichen Optionen des Charts
+    const originalOptions = JSON.parse(JSON.stringify(chartArticlesPerDay.options));
+
+    // Speichere den ursprünglichen Hintergrund des Canvas
+    const canvas = chartArticlesPerDay.canvas;
+    const originalBackgroundColor = canvas.style.backgroundColor;
+
+    // Setze den Hintergrund des Canvas auf weiß für den Export
+    canvas.style.backgroundColor = 'white';
+
+    // Ändere die Schriftfarbe in den Optionen auf schwarz für den Export
+    chartArticlesPerDay.options.scales.x.ticks.color = 'black'; // X-Achse Schriftfarbe
+    chartArticlesPerDay.options.scales.y.ticks.color = 'black'; // Y-Achse Schriftfarbe
+    chartArticlesPerDay.options.plugins.title.color = 'black'; // Titel Schriftfarbe
+    chartArticlesPerDay.options.plugins.legend.labels.color = 'black'; // Legende Schriftfarbe
+
+    // Weitere Optionen zur Textfarbe (optional, für alle anderen Texte)
+    chartArticlesPerDay.options.plugins.tooltip.bodyColor = 'black'; // Tooltip Text
+    chartArticlesPerDay.options.plugins.tooltip.titleColor = 'black'; // Tooltip Title
+
+    // Ändere die Schriftfarbe für alle Labels im Chart
+    chartArticlesPerDay.options.plugins.legend.labels.color = 'black'; // Legendenbeschriftung
+    chartArticlesPerDay.options.plugins.tooltip.bodyColor = 'black'; // Tooltip Body
+    chartArticlesPerDay.options.plugins.tooltip.titleColor = 'black'; // Tooltip Titel
+
+    // Generiere das Bild im JPG-Format (keine Transparenz, weißer Hintergrund)
+    const imageUrl = chartArticlesPerDay.toBase64Image('image/jpeg', 1.0); // 'image/jpeg' für JPG, Qualität 1.0 für höchste Qualität
+
+    // Stelle die ursprünglichen Optionen und den Hintergrund wieder her
+    chartArticlesPerDay.options = originalOptions;
+    canvas.style.backgroundColor = originalBackgroundColor;
+
+    // Erstelle einen temporären Link, um das Bild herunterzuladen
+    const a = document.createElement('a');
+    a.href = imageUrl;
+    a.download = 'chart_articles_per_day.jpg'; // Der Dateiname für den Download
+    a.click(); // Klicke den Link, um den Download auszulösen
+});
+</script>
+
+
+{% endblock content %}

@@ -1,0 +1,260 @@
+{% extends "base.html" %} {% block content %}
+
+<!-- HERO -->
+<div class="col">
+  <div class="row g-0 site-info">
+      <div class="col-md-4 p-2 d-flex justify-content-center">
+          <img src="{{ url_for('static', filename='energywatch.png') }}" style="width: 100%; object-fit: contain;" alt="energyWatch">
+      </div>
+       <div class="col-md-8 p-4">
+          <p class="card-text">
+            Diese App sammelt Strompreisdaten von verschiedenen Anbietern für deutsche Städte und speichert Preisänderungen. Nutzerinnen und Nutzer können für die 20 größten deutschen Städte Strompreisdaten abrufen und vergleichen.
+            <br/>
+            <br/>
+            Als Datengrundlage dient das Vergleichportal check24.de
+            <br/>
+            Alle Strompreise beziehen sich auf Tarife, die mit einem durchschnittlichen Verbrauch von 2.500 kWh berechnet wurden.
+
+              <details>
+                <summary style="color:black !important">Technischer Hintergrund</summary>
+                <p style="color:black !important">Zwei mal am Tag läuft auf einem Online-Server ein Python-Script, welches den Inhalt folgender URL request'et:</p>
+                <code style="color:black !important">https://www.check24.de/strom/vergleich/check24/?product_id=1&stats=yes&sortfield=popularity&sortorder=asc&zipcode=<strong>{zipcode}</strong>&city=<strong>{city_to_add}</strong>&totalconsumption=2500&pricing=month&setting=individual&commoncarrier=yes&customertype=private&energymix_type=all&tariffscore=0&contractperiod=12&consider_max_bonus_share=yes&cancellationperiod=30&contractextension=1&priceguarantee=fixed_price&priceguarantee_months=99&maxtariffs=2&companyevaluation_positive=yes&subscriptiononly=yes&guidelinematch=yes&packages=no&secondarytime_active=no&secondarytime=0&reference_provider_hash=drewag&reference_tariffversion_key=1278640-base&calculationparameter_id=1cbe3c84f1d5c154a174133c73c10fef&pagesize=120</code>
+                <br/>
+                <br/>
+                <p style="color:black !important">Wie in der URL zu sehen ist, werden Zipcode und City durch vorgegebene Werte ersetzt. Danach wird mit der library <strong>BeautifulSoup</strong> nach Tarif-Details gesucht. Alle Tarife werden gespeichert und mit einer <strong>SQLite-Datenbank</strong> verglichen. Unterscheidet sich ein Tarif-Preis vom letzten erfassten Tarif-Preis, wird ein neuer <strong>ProductChange</strong> in der Datenbank gespeichert und von dieser Flask-App abgerufen.</p>
+              </details>
+
+      </div>
+
+       <div class="container">
+        <div class="row">
+          <div class="col">
+             <div class="row g-0 justify-content-end">
+              <div class="col-md-2" style="padding-right: 1rem;">
+                <a href="https://www.linkedin.com/in/sebastian-christoph-9500a4118/" class="btn btn-primary my-2" style="width: 100%;" target="_blank">LinkedIn <i class="icon-linkedin"> </i></a>
+              </div>
+
+              <div class="col-md-2" style="padding-right: 1rem;">
+                <a href="https://github.com/SebastianChristoph/energywatch" class="btn btn-primary my-2" style="width: 100%;" target="_blank">GitHub <i class="icon-github"> </i></a>
+              </div>
+
+              <div class="col-md-2" style="padding-right: 1rem;">
+                <a href="mailto:hallo@sebastianchristoph.com" class="btn btn-secondary my-2" style="width: 100%;" target="_blank">Kontakt <i class="icon-envelope"> </i></a>
+              </div>
+
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<br/>
+<hr>
+<br/>
+
+    {% if city == None or provider == None %}
+        <h6>Bitte wählen Sie Stadt und Anbieter</h6>
+
+        <p>
+            {% if city != None%}
+                <strong>Stadt:</strong> {{city}}
+            {% endif %}
+            {% if provider != None%}
+                <strong>Anbieter:</strong>  {{provider}}
+            {% endif %}
+        </p>
+    {% endif %}
+
+    {% if city and provider %}
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+        <code style="color: white">
+          <br/>
+          (Ein Klick auf einen Legenden-Eintrag blendet die Daten dafür ein / aus)
+        </code>
+        <br/>
+        <br/>
+        <div class="d-flex flex-row-reverse">
+            <div class="p-2">
+                <a href="{{ url_for('energywatch') }}" class="custom-btn">Weitere Preisabfrage</a>
+            </div>
+
+          </div>
+
+    {% else %}
+
+        <form action="/energywatch_data_handling" method="post" class="mb-4">
+
+            {% if city == None %}
+                <label for="city">Stadt wählen:</label>
+
+                <select name="city" id="city">
+
+                    {% for city in cities %}
+                        <option value="{{city}}">{{city}}</option>
+                    {% endfor %}
+                </select>
+
+            {% endif %}
+
+            <!-- STEP 1 PROVIDER-->
+
+            {% if city != None and provider == None %}
+                <label for="providers">Anbieter wählen:</label>
+                <select name="provider" id="providers">
+
+                    {% for provider_to_choose in providers %}
+                        <option value="{{provider_to_choose}}">{{provider_to_choose}}</option>
+                    {% endfor %}
+                </select>
+
+                <input type="hidden" name="city" value="{{city}}">
+            {% endif %}
+
+            <br/>
+            <br/>
+            <input class="custom-btn" type="submit" value="Weiter">
+        </form>
+    {% endif %}
+    <br/>
+    <br/>
+    <div class="container">
+        <div class="d-flex flex-row-reverse">
+          <div class="p-2">
+            <a href={{ url_for('dashboard') }} class="custom-btn">Zurück zum Dashboard</a>
+          </div>
+        </div>
+    </div>
+
+    <hr>
+    <details>
+        <summary>Daily Price Changes</summary>
+
+        <table class="table table-sm table-bordered">
+          <thead>
+              <tr>
+              <th scope="col">Id</th>
+              <th scope="col">City</th>
+              <th scope="col">Provider</th>
+              <th scope="col">Tariff</th>
+              <th scope="col">Date</th>
+              <th scope="col">Price Before</th>
+              <th scope="col">Price NOw</th>
+              <th scope="col">Difference</th>
+              <th scope="col">Trend</th>
+              </tr>
+          </thead>
+          <tbody>
+
+              {% for changes in todays_price_changes %}
+                <tr>
+                    {% for data in changes %}
+                      <td>{{data}}</td>
+                    {% endfor %}
+                </tr>
+              {% endfor %}
+
+          </tbody>
+      </table>
+      </details>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const ctx = document.getElementById('myChart');
+
+  // Initialisiere ein leeres Dataset
+  let datasets = [];
+
+  // Extrahiere die Daten aus dem JSON-Objekt
+  try {
+      // Das JSON-Objekt (chartData) enthält alle Preis-Daten nach Anbieter
+      var chartData = JSON.parse('{{ results_json | safe }}');
+
+      // Extrahiere die Datumswerte aus dem ersten Datensatz als gemeinsame X-Achse
+      var dates = Object.keys(chartData[Object.keys(chartData)[0]]);
+
+      // Erstelle die Datasets für das Diagramm
+      datasets = Object.keys(chartData).map(key => {
+          // Extrahiere die Werte für jedes Datum (null-Werte werden als Lücken übersprungen)
+          const data = dates.map(date => chartData[key][date] !== null ? chartData[key][date] : null);
+
+          return {
+              label: key, // Verwende den Anbieter-Namen als Label
+              data: data, // Die zugehörigen Werte
+              fill: false, // Keine Füllung unter den Linien
+              tension: 0, // Für die Linienzugspannung
+              spanGaps: true, // Überspringe Lücken (null-Werte)
+              stepped: true // Setze auf true für gestufte Linien
+          };
+      });
+  }
+  catch (error) {
+      console.log("Fehler beim Parsen der Daten: ", error);
+  }
+
+  // Erstelle das Diagramm
+  new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: dates, // Verwende die extrahierten Datumswerte als X-Achse
+          datasets: datasets, // Füge die erstellten Datasets hinzu
+      },
+      options: {
+          scales: {
+              y: {
+                  // Dynamische Skalierung basierend auf dem letzten Wert des ersten Datensatzes
+                  // min: 15,
+                  // max: datasets[0]['data'][datasets[0]['data'].length - 1] + 5,
+                  beginAtZero: false,
+                  ticks: {
+                      color: 'white',
+                  },
+                  title: {
+                      display: true,
+                      text: "Netto-Preis in Eurocents pro kWh",
+                      color: "white",
+                  },
+              },
+              x: {
+                  ticks: { color: 'white', beginAtZero: true },
+              }
+          },
+          plugins: {
+              title: {
+                  display: true,
+                  text: 'Entwicklung der Energiepreise (netto) für ' + '{{provider}}' + ' in ' + '{{city}}',
+                  font: {
+                      size: 22,
+                  },
+                  color: "white",
+              },
+              subtitle: {
+                  display: true,
+                  text: 'Datenquelle: check24.de; Angaben ohne Gewähr',
+                  color: '#4adfd6',
+                  font: {
+                      size: 12,
+                      family: 'tahoma',
+                      weight: 'normal',
+                      style: 'italic',
+                  },
+                  padding: {
+                      bottom: 10,
+                  }
+              },
+              legend: {
+                  labels: {
+                      color: "white",
+                  }
+              }
+          }
+      }
+  });
+  </script>
+
+
+{% endblock content %}

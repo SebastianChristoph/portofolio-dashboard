@@ -1,0 +1,110 @@
+{% extends "base.html" %} {% block content %}
+
+<main role="main">
+
+  <section class="jumbotron text-start">
+    <div class="container">
+      <h1 class="jumbotron-heading">Sebastian Christoph - App Dashboard</h1>
+      <p class="lead">Wie entwickeln sich Preise, Stromtarife und digitale Inhalte in Deutschland?
+        Meine Web-Apps sammeln und analysieren Daten aus verschiedenen Quellen, um Veränderungen transparent zu machen.
+        Erhalten Sie Einblicke und bleiben Sie informiert – alles an einem Ort.</p>
+  </section>
+
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <div class="row g-0">
+          <div class="col-md-2" style="padding-right: 1rem;">
+            <a href="https://www.linkedin.com/in/sebastian-christoph-9500a4118/" class="btn btn-primary my-2" style="width: 100%;" target="_blank">LinkedIn <i class="icon-linkedin"> </i></a>
+          </div>
+
+          <div class="col-md-2" style="padding-right: 1rem;">
+            <a href="https://github.com/SebastianChristoph" class="btn btn-primary my-2" style="width: 100%;" target="_blank">GitHub <i class="icon-github"> </i></a>
+          </div>
+
+          <div class="col-md-2" style="padding-right: 1rem;">
+            <a href="mailto:hallo@sebastianchristoph.com" class="btn btn-secondary my-2" style="width: 100%;" target="_blank">Kontakt <i class="icon-envelope"> </i></a>
+          </div>
+
+        </div>
+      </div>
+  </div>
+</div>
+
+  <div class="container" style="margin-top: 2rem">
+    <div class="row">
+      <div class="col">
+        <a href="https://check-die-preise.de/" target="_blank" style="text-decoration: none; color: black; font-weight: normal;">
+          <div class="card mb-3 mt-12 dashboard-card">
+            <div class="row g-0">
+              <div class="col-md-2 p-2">
+                <img src="{{ url_for('static', filename='checkdiepreise.png') }}" class="img-fluid rounded-start" alt="CheckDiePreise">
+              </div>
+              <div class="col-md-8 p-2">
+                <div class="card-body">
+                  <p class="card-text">
+                    <strong>check-die-preise.de</strong>
+                    <br/>
+                    Wie sehr gehen die Preise in deutschen Märkten nach oben oder unten?
+                    Wird Butter wirklich immer teurer? Werden Malms bei IKEA immer günstiger?
+                    Um sich ein Bild verschaffen zu können, durchsuchen Roboter die Online-Shops der bekanntesten WebShops Deutschlands und sammeln Preise in 6 WebStores - und das täglich.</p>
+
+                    <p class="card-text">Erkunde selbst die Daten oder hilf mit, noch mehr Supermärkte, Drogerien oder Baumärkte hinzuzufügen.</p>
+
+                </div>
+              </div>
+            </div>
+          </div>
+      </a>
+      </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <div class="col-12 col-md">
+        <a href={{ url_for('bildwatch')}} style="text-decoration: none; color: black; font-weight: normal;">
+          <div class="card mb-3 mt-4 dashboard-card">
+            <div class="row g-0">
+              <div class="col-md-4 p-2">
+                <img src="{{ url_for('static', filename='bildwatch.png') }}" class="img-fluid rounded-start" alt="BILDwatch">
+              </div>
+              <div class="col-md-8 p-2">
+                <div class="card-body">
+                  <p class="card-text">Diese App hält dich über die neuesten <strong>BILDplus-Artikel</strong> auf dem Laufenden! Sie sammelt automatisch alle Premium-Inhalte von der BILD-Website und speichert die wichtigsten Infos in einer praktischen JSON-Datei. Das Beste: Sie überprüft regelmäßig, ob einer dieser Artikel frei zugänglich wird. Wenn das passiert, merkt sich die App, wie lange der Artikel exklusiv war und speichert diese Info für dich. So bleibst du immer auf dem neuesten Stand!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+      </a>
+      </div>
+
+      <div class="col-12 col-md">
+        <a href={{ url_for('energywatch')}} style="text-decoration: none; color: black; font-weight: normal;">
+          <div class="card mb-3 mt-4 dashboard-card">
+            <div class="row g-0">
+              <div class="col-md-4 p-2">
+                <img src="{{ url_for('static', filename='energywatch.png') }}" class="img-fluid rounded-start" alt="Energywatch">
+              </div>
+              <div class="col-md-8 p-2">
+                <div class="card-body">
+                  <p class="card-text">
+                    Diese App hilft dir, die <strong>Strompreise</strong> in verschiedenen deutschen Städten im Blick zu behalten! Sie sammelt aktuelle Daten von zahlreichen Anbietern und vergleicht sie mit den Preisen der Vergangenheit. Sobald sich etwas ändert, wird das direkt erfasst. Die App analysiert Tarife, erkennt Preisveränderungen und fügt neue oder aktualisierte Tarife automatisch hinzu. So bleibst du immer auf dem Laufenden und kannst die besten Stromtarife schnell finden!</p>
+
+                </div>
+              </div>
+            </div>
+          </div>
+      </a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+
+
+
+
+
+{% endblock content %}
